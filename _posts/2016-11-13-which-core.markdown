@@ -6,7 +6,7 @@ categories: concurrency
 ---
 I am currently reading Anthony Williams' [C++ Concurrency in Action][book] these days. While trying to analyze the
 comparative performance of various read write (shared) mutexes, a friend recommended to bind the threads to specific
-cores on the machine. It turns out a very loaded statement. If you do `lscpu -e` on your linux box, you are going to see
+cores on the machine. It turns out to be a very loaded statement. If you do `lscpu -e` on your linux box, you are going to see
 output similar to this:
 
 ```
@@ -21,7 +21,7 @@ CPU NODE SOCKET CORE L1d:L1i:L2:L3 ONLINE MAXMHZ    MINMHZ
 7   0    0      3    3:3:3:0       yes
 ```
 
-The above is the output from a 4 core (8 if [hyper-threading][hyper-threading] is included) machine. All the cores are
+Above is the output from a 4 core (8 if [hyper-threading][hyper-threading] is included) machine. All the cores are
 on the same socket ([numa][numa] architecture). This gives rise to 4 distinct possibilities:
 * two threads are bound on the same logical core
 * two threads are bound on the same physical core, but different logical core (hyper-threading)
@@ -40,8 +40,11 @@ void increment_single_thread(T& counter)
       ++counter;
 }
 ```
-`__rdtsc` is from gcc's header `x86intrin.h`. On running the above code after setting the cores appropriately, I get the
-following results:
+`__rdtsc` is from gcc's header `x86intrin.h`. In case of two threads, I look at two possibilities:
+* counter is an atomic variable (`std::atomic<uint64_t>`)
+* counter is a regular uint64_t protected by a `std::mutex`
+
+On running the above code after setting the cores appropriately, I get the following results:
 
 ```
 Single thread: 122,594,845
@@ -83,6 +86,15 @@ invalidated, and as a result more trips to the main memory are required to synch
 Lock performance suffers both from cache coherency issues as well as contention.
 * My machine didn't have two cores on separate sockets, so unfortunately I don't have numbers from those. My guess is
 that number is going to be even smaller due to QPI overhead.
+
+The above **does not** mean that hyper-threading is the way to go! Following is from the [wiki page][hyper-threading]
+
+```
+Hyper-Threading can improve the performance of some MPI applications, but not all. Depending on the cluster
+configuration and, most importantly, the nature of the application running on the cluster, performance gains can vary or
+even be negative. The next step is to use performance tools to understand what areas contribute to performance gains and
+what areas contribute to performance degradation.
+```
 
 [book]: https://www.amazon.com/C-Concurrency-Action-Practical-Multithreading/dp/1933988770/
 [hyper-threading]: https://en.wikipedia.org/wiki/Hyper-threading
