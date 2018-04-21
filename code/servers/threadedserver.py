@@ -1,6 +1,6 @@
-# basicserver.py
-
+import threading
 from socket import *  # pylint: disable=unused-wildcard-import, wildcard-import
+
 
 def echo_handler(address, request):
     print('Got a connection from ', address)
@@ -12,15 +12,17 @@ def echo_handler(address, request):
     request.close()
 
 
-def echo_server(address, backlog=5):
+def threaded_server(address, backlog=5):
     sock = socket(AF_INET, SOCK_STREAM)
     sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, True)
     sock.bind(address)
     sock.listen(backlog)
     while True:
         request, addr = sock.accept()
-        echo_handler(addr, request)
+        t = threading.Thread(
+            target=echo_handler, args=(addr, request), daemon=True)
+        t.start()
 
 
 if __name__ == '__main__':
-    echo_server(('', 25000))
+    threaded_server(('', 25000))

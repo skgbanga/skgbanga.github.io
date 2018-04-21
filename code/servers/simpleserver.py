@@ -4,6 +4,7 @@ from socketserver import TCPServer, BaseRequestHandler
 
 class EchoHandler(BaseRequestHandler):
     def handle(self):
+        print('Got a connection from ', self.client_address)
         while True:
             msg = self.request.recv(8192)  # blocking call
             if not msg:  # happens when the connection is closed by the user
