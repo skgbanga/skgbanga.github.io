@@ -1,13 +1,18 @@
 # selectserver.py
+#
+# callback based echo server that can handle multiple connections
 
 import select
 from socket import *  # pylint: disable=unused-wildcard-import, wildcard-import
 
 
+# the entire program is ONLY this loop
 def event_loop(handlers):
     while True:
         wants_recv = [h for h in handlers if h.wants_to_recv()]
         wants_send = [h for h in handlers if h.wants_to_send()]
+        # magic of the select
+        # select call blocks, it has a timeout features which can be used
         can_recv, can_send, _ = select.select(wants_recv, wants_send, [])
         for h in can_recv:
             h.handle_recv()
@@ -52,6 +57,9 @@ class TCPServer(EventHandler):
     def handle_recv(self):
         client, addr = self.sock.accept()
         print('Got a connection from', addr)
+        # it is the responsibility of the server to add client
+        # to the handler list, and responsibility of the client
+        # to remove itself from the handler list
         self.handler_list.append(
             self.client_handler(client, self.handler_list))
 
@@ -84,6 +92,7 @@ class TCPEchoClient(TCPClient):
     def wants_to_recv(self):
         return True
 
+    # this will only be called such that sock.recv doens't block
     def handle_recv(self):
         data = self.sock.recv(8192)
         if not data:
