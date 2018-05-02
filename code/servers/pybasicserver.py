@@ -2,15 +2,14 @@
 
 from socket import *  # pylint: disable=unused-wildcard-import, wildcard-import
 
-
-def echo_client(addr, client):
+def echo_client(addr, conn):
     print(f'Got a connection from {addr}')
     while True:
-        msg = client.recv(8192)
+        msg = conn.recv(8192)
         if not msg:
             break
-        client.sendall(msg)
-    client.close()
+        conn.sendall(msg)
+    conn.close()
 
 def echo_server(addr):
     sock = socket()
@@ -18,8 +17,8 @@ def echo_server(addr):
     sock.bind(addr)
     sock.listen(1)
     while True:
-        client, addr = sock.accept()
-        echo_client(addr, client)
+        conn, addr = sock.accept()
+        echo_client(addr, conn)
 
 
 if __name__ == '__main__':

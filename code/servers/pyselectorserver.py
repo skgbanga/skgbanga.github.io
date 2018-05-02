@@ -14,7 +14,6 @@ def accept(sock, _):
 
 
 class Connection:
-
     def __init__(self):
         self.outgoing = bytearray()
 
