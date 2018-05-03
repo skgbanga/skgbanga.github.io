@@ -90,12 +90,12 @@ def loop():
 
 async def echo_client(addr, conn):
     print(f"Got a connection from {addr}")
-    while True:
-        msg = await recv(conn)
-        if not msg:
-            break
-        await send(conn, msg)
-    conn.close()
+    with conn:
+        while True:
+            msg = await recv(conn)
+            if not msg:
+                break
+            await send(conn, msg)
 
 
 async def echo_server(addr):
@@ -104,10 +104,10 @@ async def echo_server(addr):
     sock.bind(addr)
     sock.listen(1)
     sock.setblocking(False)
-
-    while True:
-        conn, addr = await connect(sock)
-        Task(echo_client(addr, conn))
+    with sock:
+        while True:
+            conn, addr = await connect(sock)
+            Task(echo_client(addr, conn))
 
 
 if __name__ == "__main__":
