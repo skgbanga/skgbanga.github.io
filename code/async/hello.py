@@ -1,13 +1,21 @@
 # hello.py
 
 import curio
-
+import requests
 
 def fib(n):
     if n < 2:
         return 1
 
     return fib(n - 1) + fib(n - 2)
+
+
+def fibsum():
+    total = 0
+    for n in range(36):
+        total += fib(n)
+
+    return total
 
 
 async def friend(name):
@@ -35,9 +43,11 @@ async def kid():
         await f.spawn(friend, 'Thomas')
 
         try:
-            total = 0
-            for n in range(50):
-                total += fib(n)
+            r = await curio.run_in_thread(requests.get,
+                                          f'http://www.dabeaz.com/cgi-bin/fib.py?n=50')
+            resp = r.json()
+            total = int(resp['value'])
+            print('Sum of first 36 fib numbers is', total)
 
         except curio.CancelledError:
             print('Fine. Saving my work.')
